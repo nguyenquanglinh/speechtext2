@@ -33,8 +33,7 @@ from official.utils.misc import distribution_utils
 from official.utils.misc import model_helpers
 
 # Default vocabulary file
-_VOCABULARY_FILE = os.path.join(
-    os.path.dirname(__file__), "data/vocabulary.txt")
+_VOCABULARY_FILE = os.path.join(os.path.dirname(__file__), "data/vocabulary.txt")
 # Evaluation metrics
 _WER_KEY = "WER"
 _CER_KEY = "CER"
@@ -326,8 +325,8 @@ def define_deep_speech_flags():
     flags.adopt_module_key_flags(flags_core)
 
     flags_core.set_defaults(
-        model_dir="/tmp/deep_speech_model/",
-        export_dir="/tmp/deep_speech_saved_model/",
+        model_dir=os.path.join(os.path.abspath(os.getcwd()),"deep_speech_model"),
+        export_dir=os.path.join(os.path.abspath(os.getcwd()),"deep_speech_saved_model"),
         train_epochs=10,
         batch_size=128,
         hooks="")
@@ -339,12 +338,12 @@ def define_deep_speech_flags():
 
     flags.DEFINE_string(
         name="train_data_dir",
-        default="/tmp/librispeech_data/test-clean/LibriSpeech/test-clean.csv",
+        default=os.path.join(os.path.abspath(os.getcwd()), "data/librispeech_data/extractdata/test-clean/LibriSpeech/test-clean.csv"),
         help=flags_core.help_wrap("The csv file path of train dataset."))
 
     flags.DEFINE_string(
         name="eval_data_dir",
-        default="/tmp/librispeech_data/test-clean/LibriSpeech/test-clean.csv",
+        default=os.path.join(os.path.abspath(os.getcwd()), "data/librispeech_data/extractdata/test-clean/LibriSpeech/test-clean.csv"),
         help=flags_core.help_wrap("The csv file path of evaluation dataset."))
 
     flags.DEFINE_bool(

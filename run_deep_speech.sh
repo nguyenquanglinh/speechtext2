@@ -1,8 +1,8 @@
 #!/bin/bash
 # Script to run deep speech model to achieve the MLPerf target (WER = 0.23)
 # Step 1: download the LibriSpeech dataset.
-echo "Data downloading..."
-python data/download.py
+#echo "Data downloading..."
+#python data/download.py
 
 ## After data downloading, the dataset directories are:
 train_clean_100="/tmp/librispeech_data/train-clean-100/LibriSpeech/train-clean-100.csv"

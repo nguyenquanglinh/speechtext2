@@ -39,8 +39,8 @@ LIBRI_SPEECH_URLS = {
         "http://www.openslr.org/resources/12/train-clean-100.tar.gz",
     "train-clean-360":
         "http://www.openslr.org/resources/12/train-clean-360.tar.gz",
-    # "train-other-500":
-    #     "http://www.openslr.org/resources/12/train-other-500.tar.gz",
+    "train-other-500":
+        "http://www.openslr.org/resources/12/train-other-500.tar.gz",
     "dev-clean":
         "http://www.openslr.org/resources/12/dev-clean.tar.gz",
     "dev-other":
@@ -99,7 +99,7 @@ def convert_audio_and_split_transcript(input_dir, source_name, target_name,
   """
 
     logging.info("Preprocessing audio and transcript for %s" % source_name)
-    source_dir = os.path.join(input_dir, source_name)
+    # source_dir = os.path.join(input_dir, source_name)
     target_dir = os.path.join(input_dir, target_name)
 
     if not tf.io.gfile.exists(target_dir):
@@ -109,7 +109,7 @@ def convert_audio_and_split_transcript(input_dir, source_name, target_name,
     tfm = Transformer()
     # Convert all FLAC file into WAV format. At the same time, generate the csv
     # file.
-    for root, _, filenames in tf.io.gfile.walk(source_dir):
+    for root, _, filenames in tf.io.gfile.walk(input_dir):
         for filename in fnmatch.filter(filenames, "*.trans.txt"):
             trans_file = os.path.join(root, filename)
             with codecs.open(trans_file, "r", "utf-8") as fin:
@@ -152,10 +152,11 @@ def download_and_process_datasets(directory, datasets):
         try:
             logging.info("Preparing dataset %s", dataset)
             dataset_dir = os.path.join(directory, dataset)
-            download_and_extract(dataset_dir + ".tar.gz", directory+"/extractdata/"+dataset, LIBRI_SPEECH_URLS[dataset])
+            download_and_extract(dataset_dir + ".tar.gz", directory + "/extractdata/" + dataset,
+                                 LIBRI_SPEECH_URLS[dataset])
             convert_audio_and_split_transcript(
-                directory + "/extractdata/" + dataset + "/LibriSpeech", dataset, dataset + "-wav",
-                directory+"/extractdata/"+dataset + "/LibriSpeech", dataset + ".csv")
+                directory + "/extractdata/" + dataset, dataset, dataset + "-wav",
+                directory + "/extractdata/" + dataset + "/LibriSpeech", dataset + ".csv")
         except FileNotFoundError:
             logging.info("%s not found", dataset)
         finally:
