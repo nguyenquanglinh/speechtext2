@@ -229,8 +229,9 @@ def run_deep_speech(_):
     tf.compat.v1.set_random_seed(flags_obj.seed)
     # Data preprocessing
     logging.info("Data preprocessing...")
-    train_speech_dataset = generate_dataset(flags_obj.train_data_dir)
-    eval_speech_dataset = generate_dataset(flags_obj.eval_data_dir)
+    print(flags_obj.train_data_dir)
+    train_speech_dataset = generate_dataset(os.getcwd()+flags_obj.train_data_dir)
+    eval_speech_dataset = generate_dataset(os.getcwd()+flags_obj.eval_data_dir)
 
     # Number of label classes. Label string is "[a-z]' -"
     num_classes = len(train_speech_dataset.speech_labels)
@@ -339,12 +340,12 @@ def define_deep_speech_flags():
 
     flags.DEFINE_string(
         name="train_data_dir",
-        default="/content/content/librispeech_data/test-clean/LibriSpeech/test-clean.csv",
+        default="/content/librispeech_data/test-clean/LibriSpeech/test-clean.csv",
         help=flags_core.help_wrap("The csv file path of train dataset."))
 
     flags.DEFINE_string(
         name="eval_data_dir",
-        default="/content/content/librispeech_data/test-clean/LibriSpeech/test-clean.csv",
+        default="/content/librispeech_data/test-clean/LibriSpeech/test-clean.csv",
         help=flags_core.help_wrap("The csv file path of evaluation dataset."))
 
     flags.DEFINE_bool(
