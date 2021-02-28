@@ -172,7 +172,7 @@ def define_data_download_flags():
                            "If true, only download the training set")
     absl_flags.DEFINE_bool("dev_only", False,
                            "If true, only download the dev set")
-    absl_flags.DEFINE_bool("test_only", False,
+    absl_flags.DEFINE_bool("test_only", True,
                            "If true, only download the test set")
 
 
