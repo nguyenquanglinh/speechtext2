@@ -52,7 +52,7 @@ LIBRI_SPEECH_URLS = {
 }
 
 
-def download_and_extract(directory, extractdata, url):
+def download_and_extract(directory, url):
     """Download and extract the given split of dataset.
 
   Args:
@@ -60,13 +60,28 @@ def download_and_extract(directory, extractdata, url):
     url: the url to download the data file.
   """
 
-    if not tf.io.gfile.exists(extractdata):
-        tf.io.gfile.makedirs(extractdata)
-        try:
-            with tarfile.open(directory, "r") as tar:
-                tar.extractall(extractdata)
-        finally:
-            print(directory + "extractall done!")
+    if not tf.io.gfile.exists(directory):
+        tf.io.gfile.makedirs(directory)
+
+    _, tar_filepath = tempfile.mkstemp(suffix=".tar.gz")
+
+    try:
+        logging.info("Downloading %s to %s" % (url, tar_filepath))
+
+        def _progress(count, block_size, total_size):
+            sys.stdout.write("\r>> Downloading {} {:.1f}%".format(
+                tar_filepath, 100.0 * count * block_size / total_size))
+            sys.stdout.flush()
+
+        urllib.request.urlretrieve(url, tar_filepath, _progress)
+        print()
+        statinfo = os.stat(tar_filepath)
+        logging.info(
+            "Successfully downloaded %s, size(bytes): %d" % (url, statinfo.st_size))
+        with tarfile.open(tar_filepath, "r") as tar:
+            tar.extractall(directory)
+    finally:
+        tf.io.gfile.remove(tar_filepath)
 
 
 def convert_audio_and_split_transcript(input_dir, source_name, target_name,
@@ -99,7 +114,7 @@ def convert_audio_and_split_transcript(input_dir, source_name, target_name,
   """
 
     logging.info("Preprocessing audio and transcript for %s" % source_name)
-    # source_dir = os.path.join(input_dir, source_name)
+    source_dir = os.path.join(input_dir, source_name)
     target_dir = os.path.join(input_dir, target_name)
 
     if not tf.io.gfile.exists(target_dir):
@@ -109,7 +124,7 @@ def convert_audio_and_split_transcript(input_dir, source_name, target_name,
     tfm = Transformer()
     # Convert all FLAC file into WAV format. At the same time, generate the csv
     # file.
-    for root, _, filenames in tf.io.gfile.walk(input_dir):
+    for root, _, filenames in tf.io.gfile.walk(source_dir):
         for filename in fnmatch.filter(filenames, "*.trans.txt"):
             trans_file = os.path.join(root, filename)
             with codecs.open(trans_file, "r", "utf-8") as fin:
@@ -149,35 +164,28 @@ def download_and_process_datasets(directory, datasets):
     logging.info("Preparing LibriSpeech dataset: {}".format(
         ",".join(datasets)))
     for dataset in datasets:
-        try:
-            logging.info("Preparing dataset %s", dataset)
-            dataset_dir = os.path.join(directory, dataset)
-            download_and_extract(dataset_dir + ".tar.gz", directory + "/extractdata/" + dataset,
-                                 LIBRI_SPEECH_URLS[dataset])
-            convert_audio_and_split_transcript(
-                directory + "/extractdata/" + dataset, dataset, dataset + "-wav",
-                directory + "/extractdata/" + dataset + "/LibriSpeech", dataset + ".csv")
-        except FileNotFoundError:
-            logging.info("%s not found", dataset)
-        finally:
-            print("done")
+        logging.info("Preparing dataset %s", dataset)
+        dataset_dir = os.path.join(directory, dataset)
+        download_and_extract(dataset_dir, LIBRI_SPEECH_URLS[dataset])
+        convert_audio_and_split_transcript(
+            dataset_dir + "/LibriSpeech", dataset, dataset + "-wav",
+            dataset_dir + "/LibriSpeech", dataset + ".csv")
 
 
 def define_data_download_flags():
     """Define flags for data downloading."""
     absl_flags.DEFINE_string(
-        "data_dir", "/librispeech_data/",
+        "data_dir", "/tmp/librispeech_data",
         "Directory to download data and extract the tarball")
     absl_flags.DEFINE_bool("train_only", False,
                            "If true, only download the training set")
     absl_flags.DEFINE_bool("dev_only", False,
                            "If true, only download the dev set")
-    absl_flags.DEFINE_bool("test_only", True,
+    absl_flags.DEFINE_bool("test_only", False,
                            "If true, only download the test set")
 
 
 def main(_):
-    FLAGS.data_dir = os.path.abspath(os.getcwd()) + os.path.dirname(FLAGS.data_dir)
     if not tf.io.gfile.exists(FLAGS.data_dir):
         tf.io.gfile.makedirs(FLAGS.data_dir)
 

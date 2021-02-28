@@ -1,13 +1,13 @@
 #!/bin/bash
 # Script to run deep speech model to achieve the MLPerf target (WER = 0.23)
 # Step 1: download the LibriSpeech dataset.
-#echo "Data downloading..."
-#python data/download.py
+echo "Data downloading..."
+python data/download.py
 
 ## After data downloading, the dataset directories are:
 train_clean_100="/tmp/librispeech_data/train-clean-100/LibriSpeech/train-clean-100.csv"
 train_clean_360="/tmp/librispeech_data/train-clean-360/LibriSpeech/train-clean-360.csv"
-#train_other_500="/tmp/librispeech_data/train-other-500/LibriSpeech/train-other-500.csv"
+train_other_500="/tmp/librispeech_data/train-other-500/LibriSpeech/train-other-500.csv"
 dev_clean="/tmp/librispeech_data/dev-clean/LibriSpeech/dev-clean.csv"
 dev_other="/tmp/librispeech_data/dev-other/LibriSpeech/dev-other.csv"
 test_clean="/tmp/librispeech_data/test-clean/LibriSpeech/test-clean.csv"
@@ -19,7 +19,7 @@ train_file="/tmp/librispeech_data/train_dataset.csv"
 eval_file="/tmp/librispeech_data/eval_dataset.csv"
 
 head -1 $train_clean_100 > $train_file
-for filename in $train_clean_100 $train_clean_360 #$train_other_500
+for filename in $train_clean_100 $train_clean_360 $train_other_500
 do
     sed 1d $filename >> $train_file
 done
