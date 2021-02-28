@@ -339,12 +339,12 @@ def define_deep_speech_flags():
 
     flags.DEFINE_string(
         name="train_data_dir",
-        default="/content/librispeech_data/test-clean/LibriSpeech/test-clean.csv",
+        default="/content/content/librispeech_data/test-clean/LibriSpeech/test-clean.csv",
         help=flags_core.help_wrap("The csv file path of train dataset."))
 
     flags.DEFINE_string(
         name="eval_data_dir",
-        default="/content/librispeech_data/test-clean/LibriSpeech/test-clean.csv",
+        default="/content/content/librispeech_data/test-clean/LibriSpeech/test-clean.csv",
         help=flags_core.help_wrap("The csv file path of evaluation dataset."))
 
     flags.DEFINE_bool(
