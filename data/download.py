@@ -175,7 +175,7 @@ def download_and_process_datasets(directory, datasets):
 def define_data_download_flags():
   """Define flags for data downloading."""
   absl_flags.DEFINE_string(
-      "data_dir", "tmp/librispeech_data",
+      "data_dir", "/tmp/librispeech_data",
       "Directory to download data and extract the tarball")
   absl_flags.DEFINE_bool("train_only", False,
                          "If true, only download the training set")
