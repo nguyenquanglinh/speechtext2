@@ -250,7 +250,6 @@ def main(_):
             dataset_dir, dataset, dataset + "-wav",
             dataset_dir, dataset + ".csv")
 
-        dataset = "vivos"
         dataset_dir = os.path.join(FLAGS.data_dir, dataset)
         dataset_dir = os.path.join(dataset_dir, "test")
         convert_audio_vn_and_split_transcript(
