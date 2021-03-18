@@ -175,7 +175,6 @@ def convert_audio_vn_and_split_transcript(input_dir, source_name, target_name,
                     # We do a encode-decode transformation here because the output type
                     # of encode is a bytes object, we need convert it to string.
                     transcript = transcript.strip().lower()
-
                     # Convert FLAC to WAV.
                     wav_file = os.path.join(input_dir,"waves")
                     wav_file = os.path.join(wav_file, a)
