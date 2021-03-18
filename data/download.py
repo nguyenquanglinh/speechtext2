@@ -174,8 +174,7 @@ def convert_audio_vn_and_split_transcript(input_dir, source_name, target_name,
                     a,_=seqid.split("_",1)
                     # We do a encode-decode transformation here because the output type
                     # of encode is a bytes object, we need convert it to string.
-                    transcript = unicodedata.normalize("NFKD", transcript).encode(
-                        "ascii", "ignore").decode("ascii", "ignore").strip().lower()
+                    transcript = transcript.strip().lower()
 
                     # Convert FLAC to WAV.
                     wav_file = os.path.join(input_dir,"waves")
