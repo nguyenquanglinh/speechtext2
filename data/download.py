@@ -152,6 +152,48 @@ def convert_audio_and_split_transcript(input_dir, source_name, target_name,
     logging.info("Successfully generated csv file {}".format(csv_file_path))
 
 
+def convert_audio_vn_and_split_transcript(input_dir, source_name, target_name,
+                                          output_dir, output_file):
+    logging.info("Preprocessing audio and transcript for %s" % source_name)
+    source_dir = input_dir
+    target_dir = os.path.join(input_dir, target_name)
+
+    if not tf.io.gfile.exists(target_dir):
+        tf.io.gfile.makedirs(target_dir)
+
+    files = []
+    tfm = Transformer()
+    # Convert all FLAC file into WAV format. At the same time, generate the csv
+    # file.
+    for root, _, filenames in tf.io.gfile.walk(source_dir):
+        for filename in fnmatch.filter(filenames, "prompts.txt"):
+            trans_file = os.path.join(root, filename)
+            with codecs.open(trans_file, "r", "utf-8") as fin:
+                for line in fin:
+                    seqid, transcript = line.split(" ", 1)
+                    a,_=seqid.split("_",1)
+                    # We do a encode-decode transformation here because the output type
+                    # of encode is a bytes object, we need convert it to string.
+                    transcript = unicodedata.normalize("NFKD", transcript).encode(
+                        "ascii", "ignore").decode("ascii", "ignore").strip().lower()
+
+                    # Convert FLAC to WAV.
+                    wav_file = os.path.join(input_dir,"waves")
+                    wav_file = os.path.join(wav_file, a)
+                    wav_file = os.path.join(wav_file, seqid + ".wav")
+                    wav_filesize = os.path.getsize(wav_file)
+
+                    files.append((os.path.abspath(wav_file), wav_filesize, transcript))
+
+    # Write to CSV file which contains three columns:
+    # "wav_filename", "wav_filesize", "transcript".
+    csv_file_path = os.path.join(output_dir, output_file)
+    df = pandas.DataFrame(
+        data=files, columns=["wav_filename", "wav_filesize", "transcript"])
+    df.to_csv(csv_file_path, index=False, sep="\t")
+    logging.info("Successfully generated csv file {}".format(csv_file_path))
+
+
 def download_and_process_datasets(directory, datasets):
     """Download and pre-process the specified list of LibriSpeech dataset.
 
@@ -165,7 +207,8 @@ def download_and_process_datasets(directory, datasets):
     for dataset in datasets:
         logging.info("Preparing dataset %s", dataset)
         dataset_dir = os.path.join(directory, dataset)
-        download_and_extract(dataset_dir, LIBRI_SPEECH_URLS[dataset])
+        if FLAGS.train_en:
+            download_and_extract(dataset_dir, LIBRI_SPEECH_URLS[dataset])
         convert_audio_and_split_transcript(
             dataset_dir + "/LibriSpeech", dataset, dataset + "-wav",
             dataset_dir + "/LibriSpeech", dataset + ".csv")
@@ -174,31 +217,49 @@ def download_and_process_datasets(directory, datasets):
 def define_data_download_flags():
     """Define flags for data downloading."""
     absl_flags.DEFINE_string(
-        "data_dir", "/tmp/librispeech_data",
+        "data_dir", "/media/linhnguyen/data/learn/pycharm/speechtext2/data/tmp",
         "Directory to download data and extract the tarball")
+    absl_flags.DEFINE_bool("train_en", False,
+                           "If true, only download the test set")
+    absl_flags.DEFINE_string(
+        "data_vn_test_dir", "data/vivos/test",
+        "Directory data vietnamese extract the tarball")
     absl_flags.DEFINE_bool("train_only", False,
                            "If true, only download the training set")
     absl_flags.DEFINE_bool("dev_only", False,
                            "If true, only download the dev set")
-    absl_flags.DEFINE_bool("test_only", True,
+    absl_flags.DEFINE_bool("test_only", False,
                            "If true, only download the test set")
 
 
 def main(_):
     if not tf.io.gfile.exists(FLAGS.data_dir):
         tf.io.gfile.makedirs(FLAGS.data_dir)
-
-    if FLAGS.train_only:
-        download_and_process_datasets(
-            FLAGS.data_dir,
-            ["train-clean-100", "train-clean-360", "train-other-500"])
-    elif FLAGS.dev_only:
-        download_and_process_datasets(FLAGS.data_dir, ["dev-clean", "dev-other"])
-    elif FLAGS.test_only:
-        download_and_process_datasets(FLAGS.data_dir, ["test-clean", "test-other"])
+    if FLAGS.train_en:
+        if FLAGS.train_only:
+            download_and_process_datasets(
+                FLAGS.data_dir,
+                ["train-clean-100", "train-clean-360", "train-other-500"])
+        elif FLAGS.dev_only:
+            download_and_process_datasets(FLAGS.data_dir, ["dev-clean", "dev-other"])
+        elif FLAGS.test_only:
+            download_and_process_datasets(FLAGS.data_dir, ["test-clean", "test-other"])
+        else:
+            # By default we download the entire dataset.
+            download_and_process_datasets(FLAGS.data_dir, LIBRI_SPEECH_URLS.keys())
     else:
-        # By default we download the entire dataset.
-        download_and_process_datasets(FLAGS.data_dir, LIBRI_SPEECH_URLS.keys())
+        dataset = "vivos"
+        dataset_dir = os.path.join(FLAGS.data_dir, dataset)
+        dataset_dir = os.path.join(dataset_dir, "train")
+        convert_audio_vn_and_split_transcript(
+            dataset_dir, dataset, dataset + "-wav",
+            dataset_dir, dataset + ".csv")
+        dataset = "vivos"
+        dataset_dir = os.path.join(FLAGS.data_dir, dataset)
+        dataset_dir = os.path.join(dataset_dir, "test")
+        convert_audio_vn_and_split_transcript(
+            dataset_dir, dataset, dataset + "-wav",
+            dataset_dir, dataset + ".csv")
 
 
 if __name__ == "__main__":
