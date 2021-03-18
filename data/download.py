@@ -158,9 +158,6 @@ def convert_audio_vn_and_split_transcript(input_dir, source_name, target_name,
     source_dir = input_dir
     target_dir = os.path.join(input_dir, target_name)
 
-    if not tf.io.gfile.exists(target_dir):
-        tf.io.gfile.makedirs(target_dir)
-
     files = []
     tfm = Transformer()
     # Convert all FLAC file into WAV format. At the same time, generate the csv
@@ -252,6 +249,7 @@ def main(_):
         convert_audio_vn_and_split_transcript(
             dataset_dir, dataset, dataset + "-wav",
             dataset_dir, dataset + ".csv")
+
         dataset = "vivos"
         dataset_dir = os.path.join(FLAGS.data_dir, dataset)
         dataset_dir = os.path.join(dataset_dir, "test")
