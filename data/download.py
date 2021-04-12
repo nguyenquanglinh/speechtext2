@@ -66,18 +66,7 @@ def download_and_extract(directory, url):
     _, tar_filepath = tempfile.mkstemp(suffix=".tar.gz")
 
     try:
-        logging.info("Downloading %s to %s" % (url, tar_filepath))
-
-        def _progress(count, block_size, total_size):
-            sys.stdout.write("\r>> Downloading {} {:.1f}%".format(
-                tar_filepath, 100.0 * count * block_size / total_size))
-            sys.stdout.flush()
-
-        urllib.request.urlretrieve(url, tar_filepath, _progress)
-        statinfo = os.stat(tar_filepath)
-        logging.info(
-            "Successfully downloaded %s, size(bytes): %d" % (url, statinfo.st_size))
-        with tarfile.open(tar_filepath, "r") as tar:
+        with tarfile.open("/home/labkhmt/Documents/LinhNQ/speechtext2/data/vivos.tar.gz", "r") as tar:
             tar.extractall(directory)
     finally:
         tf.io.gfile.remove(tar_filepath)
@@ -148,9 +137,14 @@ def convert_audio_and_split_transcript(input_dir, source_name, target_name,
     csv_file_path = os.path.join(output_dir, output_file)
     df = pandas.DataFrame(
         data=files, columns=["wav_filename", "wav_filesize", "transcript"])
-    df.to_csv(csv_file_path, index=False, sep="\t")
+    df.to_csv(csv_file_path, index=False)
     logging.info("Successfully generated csv file {}".format(csv_file_path))
 
+def check_number_in_transcript(str_):
+    for i in str_.split(" "):
+        if i.isdigit():
+            return False
+    return True
 
 def convert_audio_vn_and_split_transcript(input_dir, source_name, target_name,
                                           output_dir, output_file):
@@ -173,19 +167,21 @@ def convert_audio_vn_and_split_transcript(input_dir, source_name, target_name,
                     # of encode is a bytes object, we need convert it to string.
                     transcript = transcript.strip().lower()
                     # Convert FLAC to WAV.
-                    wav_file = os.path.join(input_dir,"waves")
-                    wav_file = os.path.join(wav_file, a)
-                    wav_file = os.path.join(wav_file, seqid + ".wav")
-                    wav_filesize = os.path.getsize(wav_file)
-
-                    files.append((os.path.abspath(wav_file), wav_filesize, transcript))
+                    if check_number_in_transcript(transcript):
+                        wav_file = os.path.join(input_dir,"waves")
+                        wav_file = os.path.join(wav_file, a)
+                        wav_file = os.path.join(wav_file, seqid + ".wav")
+                        wav_filesize = os.path.getsize(wav_file)
+                        files.append((os.path.abspath(wav_file), wav_filesize, transcript))
+                    else:
+                        print(transcript)
 
     # Write to CSV file which contains three columns:
     # "wav_filename", "wav_filesize", "transcript".
     csv_file_path = os.path.join(output_dir, output_file)
     df = pandas.DataFrame(
         data=files, columns=["wav_filename", "wav_filesize", "transcript"])
-    df.to_csv(csv_file_path, index=False, sep="\t")
+    df.to_csv(csv_file_path, index=False)
     logging.info("Successfully generated csv file {}".format(csv_file_path))
 
 
@@ -203,16 +199,21 @@ def download_and_process_datasets(directory, datasets):
         logging.info("Preparing dataset %s", dataset)
         dataset_dir = os.path.join(directory, dataset)
         if FLAGS.train_en:
-            download_and_extract(dataset_dir, LIBRI_SPEECH_URLS[dataset])
+            download_and_extract(dataset_dir, datasets)
+        dataset="train"
         convert_audio_and_split_transcript(
-            dataset_dir + "/LibriSpeech", dataset, dataset + "-wav",
+            dataset_dir+dataset + "/LibriSpeech", dataset, dataset + "-wav",
+            dataset_dir + "/LibriSpeech", dataset + ".csv")
+        dataset = "test"
+        convert_audio_and_split_transcript(
+            dataset_dir + dataset + "/LibriSpeech", dataset, dataset + "-wav",
             dataset_dir + "/LibriSpeech", dataset + ".csv")
 
 
 def define_data_download_flags():
     """Define flags for data downloading."""
     absl_flags.DEFINE_string(
-        "data_dir", "/media/linhnguyen/data/learn/pycharm/speechtext2/data/tmp",
+        "data_dir", "/home/labkhmt/Documents/LinhNQ/DeepSpeech/LinhNQb/vivos",
         "Directory to download data and extract the tarball")
     absl_flags.DEFINE_bool("train_en", False,
                            "If true, only download the test set")
@@ -241,7 +242,7 @@ def main(_):
             download_and_process_datasets(FLAGS.data_dir, ["test-clean", "test-other"])
         else:
             # By default we download the entire dataset.
-            download_and_process_datasets(FLAGS.data_dir, LIBRI_SPEECH_URLS.keys())
+            download_and_process_datasets(FLAGS.data_dir, ["vivos"])
     else:
         dataset = "vivos"
         dataset_dir = os.path.join(FLAGS.data_dir, dataset)
