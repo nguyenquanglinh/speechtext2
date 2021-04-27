@@ -21,9 +21,7 @@ from __future__ import print_function
 import codecs
 import fnmatch
 import os
-import sys
 import tarfile
-import tempfile
 import unicodedata
 
 from absl import app as absl_app
@@ -33,7 +31,7 @@ from six.moves import urllib
 from sox import Transformer
 import tensorflow as tf
 from absl import logging
-
+from zipfile import ZipFile
 LIBRI_SPEECH_URLS = {
     "train-clean-100":
         "http://www.openslr.org/resources/12/train-clean-100.tar.gz",
@@ -59,18 +57,11 @@ def download_and_extract(directory, url):
       directory: the directory where to extract the tarball.
       url: the url to download the data file.
     """
-
-    if not tf.io.gfile.exists(directory):
-        tf.io.gfile.makedirs(directory)
-
-    _, tar_filepath = tempfile.mkstemp(suffix=".tar.gz")
-
     try:
-        with tarfile.open("/home/labkhmt/Documents/LinhNQ/speechtext2/data/vivos.tar.gz", "r") as tar:
+        with tarfile.open("/media/linhnguyen/93d25d45-9328-487b-a68e-01c7e2691234/dowloads/vivos.tar.gz", "r") as tar:
             tar.extractall(directory)
     finally:
-        tf.io.gfile.remove(tar_filepath)
-
+        print("abc")
 
 def convert_audio_and_split_transcript(input_dir, source_name, target_name,
                                        output_dir, output_file):
@@ -141,10 +132,12 @@ def convert_audio_and_split_transcript(input_dir, source_name, target_name,
     logging.info("Successfully generated csv file {}".format(csv_file_path))
 
 def check_number_in_transcript(str_):
-    for i in str_.split(" "):
-        if i.isdigit():
-            return False
-    return True
+  if str_.find(":") >0:
+    return False
+  for i in str_.split(" "):
+    if i.isdigit():
+        return False
+  return True
 
 def convert_audio_vn_and_split_transcript(input_dir, source_name, target_name,
                                           output_dir, output_file):
@@ -209,23 +202,36 @@ def download_and_process_datasets(directory, datasets):
             dataset_dir + dataset + "/LibriSpeech", dataset, dataset + "-wav",
             dataset_dir + "/LibriSpeech", dataset + ".csv")
 
+def create_file_csv_vivos():
+    dataset = "vivos"
+    download_and_extract(FLAGS.data_dir, dataset)
+    dataset_dir = os.path.join(FLAGS.data_dir, dataset)
+    dataset_dir = os.path.join(dataset_dir, "train")
+    convert_audio_vn_and_split_transcript(
+        dataset_dir, dataset, dataset + "-wav",
+        dataset_dir, dataset + "_test.csv")
+
+    dataset_dir = os.path.join(FLAGS.data_dir, dataset)
+    dataset_dir = os.path.join(dataset_dir, "test")
+    convert_audio_vn_and_split_transcript(
+        dataset_dir, dataset, dataset + "-wav",
+        dataset_dir, dataset + "_train.csv")
 
 def define_data_download_flags():
     """Define flags for data downloading."""
     absl_flags.DEFINE_string(
-        "data_dir", "/home/labkhmt/Documents/LinhNQ/DeepSpeech/LinhNQb/vivos",
+        "data_dir", "/media/linhnguyen/93d25d45-9328-487b-a68e-01c7e2691234/code/PycharmProjects/DeepSpeech/LinhNQ",
         "Directory to download data and extract the tarball")
     absl_flags.DEFINE_bool("train_en", False,
                            "If true, only download the test set")
-    absl_flags.DEFINE_string(
-        "data_vn_test_dir", "data/vivos/test",
-        "Directory data vietnamese extract the tarball")
     absl_flags.DEFINE_bool("train_only", False,
                            "If true, only download the training set")
     absl_flags.DEFINE_bool("dev_only", False,
                            "If true, only download the dev set")
     absl_flags.DEFINE_bool("test_only", False,
                            "If true, only download the test set")
+    absl_flags.DEFINE_bool("creat_vivos_csv", True,
+                           "If true, only download the training set")
 
 
 def main(_):
@@ -244,18 +250,8 @@ def main(_):
             # By default we download the entire dataset.
             download_and_process_datasets(FLAGS.data_dir, ["vivos"])
     else:
-        dataset = "vivos"
-        dataset_dir = os.path.join(FLAGS.data_dir, dataset)
-        dataset_dir = os.path.join(dataset_dir, "train")
-        convert_audio_vn_and_split_transcript(
-            dataset_dir, dataset, dataset + "-wav",
-            dataset_dir, dataset + ".csv")
-
-        dataset_dir = os.path.join(FLAGS.data_dir, dataset)
-        dataset_dir = os.path.join(dataset_dir, "test")
-        convert_audio_vn_and_split_transcript(
-            dataset_dir, dataset, dataset + "-wav",
-            dataset_dir, dataset + ".csv")
+        if FLAGS.creat_vivos_csv:
+            create_file_csv_vivos()
 
 
 if __name__ == "__main__":
