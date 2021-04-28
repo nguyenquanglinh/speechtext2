@@ -58,7 +58,7 @@ def download_and_extract(directory, url):
       url: the url to download the data file.
     """
     try:
-        with tarfile.open("/media/linhnguyen/93d25d45-9328-487b-a68e-01c7e2691234/dowloads/vivos.tar.gz", "r") as tar:
+        with tarfile.open("/media/linhnguyen/93d25d45-9328-487b-a68e-01c7e2691234/dowloads/viet-tts.tar.gz", "r") as tar:
             tar.extractall(directory)
     finally:
         print("abc")
@@ -216,7 +216,8 @@ def create_file_csv_vivos():
     convert_audio_vn_and_split_transcript(
         dataset_dir, dataset, dataset + "-wav",
         dataset_dir, dataset + "_train.csv")
-
+def create_file_csv_subaudio():
+    print("abc")
 def define_data_download_flags():
     """Define flags for data downloading."""
     absl_flags.DEFINE_string(
